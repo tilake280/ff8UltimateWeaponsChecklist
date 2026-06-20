@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FF8 Ultimate Weapon Tracker</title>
+    <!-- Prevent theme flashing on load -->
+    <script>
+        const currentTheme = localStorage.getItem('theme');
+        if (currentTheme) {
+            document.documentElement.setAttribute('data-theme', currentTheme);
+        }
+    </script>
     <style>
         :root {
             /* Light Mode Variables */
@@ -59,12 +66,39 @@
             position: relative;
         }
 
+        /* Top Controls Area */
+        .top-controls {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 25px;
+            margin-bottom: 20px;
+        }
+
+        /* Fullscreen Button */
+        .btn-fullscreen {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: opacity 0.2s, background-color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-fullscreen:hover {
+            opacity: 0.85;
+        }
+
         /* Theme Toggle Button */
         .theme-switch-wrapper {
             display: flex;
             align-items: center;
-            justify-content: flex-end;
-            margin-bottom: 20px;
         }
 
         .theme-switch {
@@ -272,10 +306,15 @@
         .card-tag { background: var(--card-bg-tag); color: var(--card-color); }
         .refine-tag { background: var(--refine-bg); color: var(--refine-color); }
 
+        /* Fullscreen adjusts */
+        :fullscreen { background-color: var(--bg-color); padding: 40px 20px; overflow-y: auto; }
+        :-webkit-full-screen { background-color: var(--bg-color); padding: 40px 20px; overflow-y: auto; }
+        :-ms-fullscreen { background-color: var(--bg-color); padding: 40px 20px; overflow-y: auto; }
+
         @media print {
             body { background: white; padding: 0; color: black; }
             .weapon-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; background: white; }
-            .theme-switch-wrapper { display: none; }
+            .top-controls { display: none; }
         }
     </style>
 </head>
@@ -283,12 +322,15 @@
 
 <div class="container">
     
-    <div class="theme-switch-wrapper">
-        <span class="theme-label">Dark Mode</span>
-        <label class="theme-switch" for="checkbox">
-            <input type="checkbox" id="checkbox" />
-            <div class="slider round"></div>
-        </label>
+    <div class="top-controls">
+        <button id="fullscreen-btn" class="btn-fullscreen">⛶ Fullscreen</button>
+        <div class="theme-switch-wrapper">
+            <span class="theme-label">Dark Mode</span>
+            <label class="theme-switch" for="checkbox">
+                <input type="checkbox" id="checkbox" />
+                <div class="slider round"></div>
+            </label>
+        </div>
     </div>
 
     <header>
@@ -585,6 +627,29 @@
     
     toggleSwitch.addEventListener('change', switchTheme, false);
 
+    // Fullscreen Logic
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    
+    fullscreenBtn.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable fullscreen: ${err.message}`);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+        if (document.fullscreenElement) {
+            fullscreenBtn.textContent = '✖ Exit Fullscreen';
+        } else {
+            fullscreenBtn.textContent = '⛶ Fullscreen';
+        }
+    });
+
     // Check completion logic
     function checkCompletion(cardId) {
         const card = document.getElementById(cardId);
@@ -617,15 +682,11 @@
         localStorage.setItem('ff8-weapon-tracker', JSON.stringify(state));
     }
 
-    // Load progress and theme on page load
+    // Load progress and toggle switch state on page load
     window.onload = function() {
-        // Load theme
-        const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
-        if (currentTheme) {
-            document.documentElement.setAttribute('data-theme', currentTheme);
-            if (currentTheme === 'dark') {
-                toggleSwitch.checked = true;
-            }
+        // Set toggle switch if dark mode was loaded synchronously in the head
+        if (document.documentElement.getAttribute('data-theme') === 'dark') {
+            toggleSwitch.checked = true;
         }
 
         // Load progress
