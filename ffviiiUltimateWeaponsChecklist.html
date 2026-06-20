@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF8 Ultimate Weapon Tracker</title>
+    <style>
+        :root {
+            /* Light Mode Variables */
+            --primary: #2980b9;
+            --success: #27ae60;
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+            --text-muted: #596a7a;
+            --border-color: #d1d9e0;
+            --item-bg: #f8fafc;
+            --item-hover: #f1f5f9;
+            
+            /* Tags Light */
+            --drop-bg: #ffebee; --drop-color: #c62828;
+            --steal-bg: #e8f5e9; --steal-color: #2e7d32;
+            --card-bg-tag: #e3f2fd; --card-color: #1565c0;
+            --refine-bg: #fff3e0; --refine-color: #ef6c00;
+        }
+
+        /* Dark Mode Variables */
+        [data-theme="dark"] {
+            --primary: #3498db;
+            --success: #2ecc71;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-muted: #9e9e9e;
+            --border-color: #333333;
+            --item-bg: #252525;
+            --item-hover: #2c2c2c;
+            
+            /* Tags Dark */
+            --drop-bg: #4a1c1c; --drop-color: #ff8a80;
+            --steal-bg: #1b3a1e; --steal-color: #b9f6ca;
+            --card-bg-tag: #1c314a; --card-color: #82b1ff;
+            --refine-bg: #4a2d15; --refine-color: #ffd180;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Theme Toggle Button */
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .theme-switch {
+            display: inline-block;
+            height: 34px;
+            position: relative;
+            width: 60px;
+        }
+
+        .theme-switch input {
+            display: none;
+        }
+
+        .slider {
+            background-color: #ccc;
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+        }
+
+        .slider:before {
+            background-color: #fff;
+            bottom: 4px;
+            content: "";
+            height: 26px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 26px;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .slider.round {
+            border-radius: 34px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        .theme-label {
+            margin-right: 10px;
+            font-weight: bold;
+            color: var(--text-muted);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            transition: color 0.3s;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1.1em;
+            transition: color 0.3s;
+        }
+
+        .weapon-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .weapon-card.completed {
+            border-color: var(--success);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.15);
+        }
+
+        [data-theme="dark"] .weapon-card {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .weapon-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+
+        .weapon-card.completed .weapon-header {
+            border-bottom-color: var(--success);
+        }
+
+        .weapon-title {
+            font-size: 1.8em;
+            margin: 0;
+            color: var(--primary);
+            transition: color 0.3s;
+        }
+
+        .weapon-card.completed .weapon-title {
+            color: var(--success);
+        }
+
+        .character-name {
+            font-weight: bold;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9em;
+            transition: color 0.3s;
+        }
+
+        .material-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .material-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: var(--item-bg);
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            transition: background 0.2s ease, border-color 0.3s;
+        }
+
+        .material-item:hover {
+            background: var(--item-hover);
+        }
+
+        .weapon-card.completed .material-item {
+            border-left-color: var(--success);
+        }
+
+        .checkbox-wrapper {
+            margin-right: 20px;
+            padding-top: 2px;
+        }
+
+        input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .weapon-card.completed input[type="checkbox"] {
+            accent-color: var(--success);
+        }
+
+        .material-info {
+            flex-grow: 1;
+        }
+
+        .material-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .completed-text .material-name {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .material-sources {
+            font-size: 0.95em;
+            color: var(--text-muted);
+            transition: color 0.3s;
+        }
+
+        .source-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            margin-right: 6px;
+            margin-bottom: 6px;
+            font-weight: 600;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .drop-tag { background: var(--drop-bg); color: var(--drop-color); }
+        .steal-tag { background: var(--steal-bg); color: var(--steal-color); }
+        .card-tag { background: var(--card-bg-tag); color: var(--card-color); }
+        .refine-tag { background: var(--refine-bg); color: var(--refine-color); }
+
+        @media print {
+            body { background: white; padding: 0; color: black; }
+            .weapon-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; background: white; }
+            .theme-switch-wrapper { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="theme-switch-wrapper">
+        <span class="theme-label">Dark Mode</span>
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+        </label>
+    </div>
+
+    <header>
+        <h1>FF8 Ultimate Weapon Tracker</h1>
+        <p class="subtitle">Check off the materials as you collect them. The card will turn green when the weapon is ready to forge!</p>
+    </header>
+
+    <!-- Squall -->
+    <div class="weapon-card" id="squall-card">
+        <div class="weapon-header">
+            <h2 class="weapon-title">Lion Heart</h2>
+            <span class="character-name">Squall</span>
+        </div>
+        <ul class="material-list">
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('squall-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">12x Pulse Ammo</span>
+                    <div class="material-sources">
+                        <span class="source-tag refine-tag">Ammo-RF</span> 1x Power Generator (yields 20)<br>
+                        <span class="source-tag refine-tag">Ammo-RF</span> 1x Energy Crystal (yields 10)<br>
+                        <span class="source-tag refine-tag">Ammo-RF</span> 1x Laser Cannon (yields 5)
+                    </div>
+                </div>
+            </li>
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('squall-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">4x Dragon Fang</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> T-Rexaur, Grendel, Blue Dragon, Hexadragon
+                    </div>
+                </div>
+            </li>
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('squall-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">1x Adamantine</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> Adamantoise<br>
+                        <span class="source-tag steal-tag">Steal</span> BGH251F2 (second encounter)<br>
+                        <span class="source-tag card-tag">Card Mod</span> 1x Minotaur Card (yields 10)
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Zell -->
+    <div class="weapon-card" id="zell-card">
+        <div class="weapon-header">
+            <h2 class="weapon-title">Ehrgeiz</h2>
+            <span class="character-name">Zell</span>
+        </div>
+        <ul class="material-list">
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('zell-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">4x Dragon Skin</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> Anacondaur, Grendel
+                    </div>
+                </div>
+            </li>
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('zell-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">1x Adamantine</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> Adamantoise<br>
+                        <span class="source-tag steal-tag">Steal</span> BGH251F2 (second encounter)<br>
+                        <span class="source-tag card-tag">Card Mod</span> 1x Minotaur Card (yields 10)
+                    </div>
+                </div>
+            </li>
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('zell-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">1x Fury Fragment</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> Grendel, Ruby Dragon, Blue Dragon<br>
+                        <span class="source-tag steal-tag">Steal</span> Blue Dragon<br>
+                        <span class="source-tag card-tag">Card Mod</span> 4x Blue Dragon Cards (yields 1)
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Irvine -->
+    <div class="weapon-card" id="irvine-card">
+        <div class="weapon-header">
+            <h2 class="weapon-title">Exeter</h2>
+            <span class="character-name">Irvine</span>
+        </div>
+        <ul class="material-list">
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('irvine-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">18x Screw</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> Geezard, GIM47N, GIM52A<br>
+                        <span class="source-tag steal-tag">Steal</span> Geezard<br>
+                        <span class="source-tag card-tag">Card Mod</span> 1x Geezard Card (yields 5)
+                    </div>
+                </div>
+            </li>
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('irvine-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">2x Dino Bone</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> T-Rexaur<br>
+                        <span class="source-tag steal-tag">Steal</span> T-Rexaur<br>
+                        <span class="source-tag card-tag">Card Mod</span> 1x Armadodo Card (yields 1) or 2x T-Rexaur Card (yields 1)
+                    </div>
+                </div>
+            </li>
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('irvine-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">2x Star Fragment</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> Chimera, Hexadragon, Ruby Dragon, T-Rexaur, Tri-Face, Iron Giant<br>
+                        <span class="source-tag steal-tag">Steal</span> Iron Giant<br>
+                        <span class="source-tag card-tag">Card Mod</span> 3x Iron Giant Cards (yields 1)
+                    </div>
+                </div>
+            </li>
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('irvine-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">1x Moon Stone</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> Imp, Torama, Elnoyle<br>
+                        <span class="source-tag steal-tag">Steal</span> Elnoyle
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Selphie -->
+    <div class="weapon-card" id="selphie-card">
+        <div class="weapon-header">
+            <h2 class="weapon-title">Strange Vision</h2>
+            <span class="character-name">Selphie</span>
+        </div>
+        <ul class="material-list">
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('selphie-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">3x Star Fragment</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> Chimera, Hexadragon, Ruby Dragon, T-Rexaur, Tri-Face, Iron Giant<br>
+                        <span class="source-tag steal-tag">Steal</span> Iron Giant<br>
+                        <span class="source-tag card-tag">Card Mod</span> 3x Iron Giant Cards (yields 1)
+                    </div>
+                </div>
+            </li>
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('selphie-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">2x Curse Spike</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> Forbidden, Grand Mantis, Imp, Malboro, Tri-Face<br>
+                        <span class="source-tag steal-tag">Steal</span> Tri-Face<br>
+                        <span class="source-tag card-tag">Card Mod</span> 1x Tri-Face Card (yields 1)
+                    </div>
+                </div>
+            </li>
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('selphie-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">1x Adamantine</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> Adamantoise<br>
+                        <span class="source-tag steal-tag">Steal</span> BGH251F2 (second encounter)<br>
+                        <span class="source-tag card-tag">Card Mod</span> 1x Minotaur Card (yields 10)
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Rinoa -->
+    <div class="weapon-card" id="rinoa-card">
+        <div class="weapon-header">
+            <h2 class="weapon-title">Shooting Star</h2>
+            <span class="character-name">Rinoa</span>
+        </div>
+        <ul class="material-list">
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('rinoa-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">2x Energy Crystal</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> Behemoth, Elnoyle, Ruby Dragon<br>
+                        <span class="source-tag card-tag">Card Mod</span> 10x Elnoyle Cards (yields 1)
+                    </div>
+                </div>
+            </li>
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('rinoa-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">2x Windmill</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> Abyss Worm, Death Claw, Thrustaevis<br>
+                        <span class="source-tag steal-tag">Steal</span> Abyss Worm, Death Claw, Thrustaevis<br>
+                        <span class="source-tag card-tag">Card Mod</span> 1x Abyss Worm Card (yields 1) or 1x Pandemona Card (yields 100)
+                    </div>
+                </div>
+            </li>
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('rinoa-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">1x Regen Ring</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> Chimera, Lefty, Torama, Turtapod, Vysage<br>
+                        <span class="source-tag steal-tag">Steal</span> Biggs (second encounter), Torama<br>
+                        <span class="source-tag card-tag">Card Mod</span> 10x Chimera Cards (yields 1)
+                    </div>
+                </div>
+            </li>
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('rinoa-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">1x Force Armlet</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> Forbidden, Ochu, X-ATM092, Edea (second encounter)<br>
+                        <span class="source-tag refine-tag">Med-RF</span> 10x Mag-J Scroll (yields 1)
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Quistis -->
+    <div class="weapon-card" id="quistis-card">
+        <div class="weapon-header">
+            <h2 class="weapon-title">Save the Queen</h2>
+            <span class="character-name">Quistis</span>
+        </div>
+        <ul class="material-list">
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('quistis-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">4x Energy Crystal</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> Behemoth, Elnoyle, Ruby Dragon<br>
+                        <span class="source-tag card-tag">Card Mod</span> 10x Elnoyle Cards (yields 1)
+                    </div>
+                </div>
+            </li>
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('quistis-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">4x Sharp Spike</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> Armadodo, Death Claw, Grand Mantis<br>
+                        <span class="source-tag steal-tag">Steal</span> Grand Mantis<br>
+                        <span class="source-tag card-tag">Card Mod</span> 1x Grand Mantis Card (yields 1) or 1x Death Claw Card (yields 1)
+                    </div>
+                </div>
+            </li>
+            <li class="material-item">
+                <div class="checkbox-wrapper"><input type="checkbox" onchange="checkCompletion('quistis-card')"></div>
+                <div class="material-info">
+                    <span class="material-name">2x Malboro Tentacle</span>
+                    <div class="material-sources">
+                        <span class="source-tag drop-tag">Drop</span> Malboro<br>
+                        <span class="source-tag steal-tag">Steal</span> Malboro<br>
+                        <span class="source-tag card-tag">Card Mod</span> 4x Malboro Cards (yields 1)
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    // Theme Toggle Logic
+    const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
+    
+    function switchTheme(e) {
+        if (e.target.checked) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+            localStorage.setItem('theme', 'light');
+        }    
+    }
+    
+    toggleSwitch.addEventListener('change', switchTheme, false);
+
+    // Check completion logic
+    function checkCompletion(cardId) {
+        const card = document.getElementById(cardId);
+        const checkboxes = card.querySelectorAll('input[type="checkbox"]');
+        const listItems = card.querySelectorAll('.material-item');
+        let allChecked = true;
+
+        checkboxes.forEach((cb, index) => {
+            if (cb.checked) {
+                listItems[index].classList.add('completed-text');
+            } else {
+                listItems[index].classList.remove('completed-text');
+                allChecked = false;
+            }
+        });
+
+        if (allChecked) {
+            card.classList.add('completed');
+        } else {
+            card.classList.remove('completed');
+        }
+        
+        saveProgress();
+    }
+
+    // Save progress to LocalStorage
+    function saveProgress() {
+        const checkboxes = document.querySelectorAll('.material-item input[type="checkbox"]');
+        const state = Array.from(checkboxes).map(cb => cb.checked);
+        localStorage.setItem('ff8-weapon-tracker', JSON.stringify(state));
+    }
+
+    // Load progress and theme on page load
+    window.onload = function() {
+        // Load theme
+        const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
+        if (currentTheme) {
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            if (currentTheme === 'dark') {
+                toggleSwitch.checked = true;
+            }
+        }
+
+        // Load progress
+        const saved = localStorage.getItem('ff8-weapon-tracker');
+        if (saved) {
+            const state = JSON.parse(saved);
+            const checkboxes = document.querySelectorAll('.material-item input[type="checkbox"]');
+            checkboxes.forEach((cb, i) => {
+                cb.checked = state[i] || false;
+            });
+            // Re-trigger visual updates
+            const cards = document.querySelectorAll('.weapon-card');
+            cards.forEach(card => checkCompletion(card.id));
+        }
+    }
+</script>
+
+</body>
+</html>
